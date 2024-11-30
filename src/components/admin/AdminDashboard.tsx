@@ -6,6 +6,7 @@ import { useSupabaseStatus } from '../../hooks/useSupabaseStatus';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { VolunteerTable } from './VolunteerTable';
+import { EventManagementTable } from './EventManagementTable';
 
 export const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -86,8 +87,8 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 space-y-8">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tableau de bord</h1>
         <div className="flex items-center gap-4">
           <button
@@ -109,7 +110,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center">
             <Calendar className="w-8 h-8 text-blue-600 mr-3" />
@@ -145,6 +146,11 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold mb-6">Gestion des événements</h2>
+        <EventManagementTable />
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-6">Événements à venir et leurs bénévoles</h2>
         {upcomingEvents.length === 0 ? (
           <p className="text-center text-gray-500 py-4">Aucun événement à venir</p>
@@ -157,7 +163,7 @@ export const AdminDashboard: React.FC = () => {
                   {format(new Date(event.date), 'EEEE d MMMM yyyy', { locale: fr })} - {event.location}
                 </p>
               </div>
-              <VolunteerTable eventId={event.id} />
+              <VolunteerTable eventId={event.id!} />
             </div>
           ))
         )}

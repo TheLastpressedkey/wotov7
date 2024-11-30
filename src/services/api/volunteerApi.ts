@@ -18,6 +18,21 @@ export const volunteerApi = {
     return data;
   },
 
+  async getByToken(token: string) {
+    const { data, error } = await supabase
+      .from('volunteers')
+      .select('*')
+      .eq('token', token)
+      .single();
+
+    if (error) {
+      console.error('Error fetching volunteer by token:', error);
+      throw new Error('Token invalide');
+    }
+
+    return data;
+  },
+
   async create(volunteer: ApiVolunteerInsert) {
     const { data, error } = await supabase
       .from('volunteers')

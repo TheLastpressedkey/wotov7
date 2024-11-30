@@ -3,10 +3,12 @@ import { EventCard } from './EventCard';
 import { useEventStore } from '../store/eventStore';
 import { RegistrationForm } from './volunteer/RegistrationForm';
 import { Loader2 } from 'lucide-react';
+import { TokenDisplay } from './volunteer/TokenDisplay';
 
 export const EventBoard: React.FC = () => {
   const { events, loading, error, fetchEvents } = useEventStore();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [registrationToken, setRegistrationToken] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -17,7 +19,7 @@ export const EventBoard: React.FC = () => {
   };
 
   const handleRegistrationSuccess = (token: string) => {
-    alert(`Inscription réussie ! Votre token est : ${token}\nConservez ce token pour modifier votre inscription ultérieurement.`);
+    setRegistrationToken(token);
     setSelectedEventId(null);
   };
 
@@ -69,6 +71,13 @@ export const EventBoard: React.FC = () => {
           eventId={selectedEventId}
           onSuccess={handleRegistrationSuccess}
           onCancel={() => setSelectedEventId(null)}
+        />
+      )}
+
+      {registrationToken && (
+        <TokenDisplay
+          token={registrationToken}
+          onClose={() => setRegistrationToken(null)}
         />
       )}
     </div>
