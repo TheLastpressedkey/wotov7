@@ -21,7 +21,7 @@ export const Navigation: React.FC = () => {
             >
               Événements
             </Link>
-            {user?.role === 'admin' ? (
+            {user?.role === 'admin' && (
               <>
                 <Link
                   to="/admin"
@@ -43,8 +43,6 @@ export const Navigation: React.FC = () => {
                   Déconnexion
                 </button>
               </>
-            ) : (
-
             )}
           </div>
         </div>
