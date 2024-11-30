@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Users, Info } from 'lucide-react';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Event } from '../types/event';
 import { useVolunteerStore } from '../store/volunteerStore';
 import { TokenUpdateForm } from './volunteer/TokenUpdateForm';
@@ -13,7 +14,7 @@ interface EventCardProps {
 export const EventCard: React.FC<EventCardProps> = ({ event, onRegister }) => {
   const [showTokenForm, setShowTokenForm] = useState(false);
   const getVolunteerStats = useVolunteerStore((state) => state.getVolunteerStats);
-  const stats = getVolunteerStats(event.id);
+  const stats = getVolunteerStats(event.id!);
   const presentParticipants = stats.present;
 
   return (
@@ -38,7 +39,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister }) => {
           <div className="space-y-2 mb-4">
             <div className="flex items-center text-gray-600">
               <Calendar className="w-5 h-5 mr-2" />
-              <span>{format(event.date, 'PPP')}</span>
+              <span>{format(event.date, 'EEEE d MMMM yyyy', { locale: fr })}</span>
             </div>
             <div className="flex items-center text-gray-600">
               <MapPin className="w-5 h-5 mr-2" />

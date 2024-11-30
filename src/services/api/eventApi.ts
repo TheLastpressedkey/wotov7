@@ -7,7 +7,13 @@ export const eventApi = {
   async getAll() {
     const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select(`
+        *,
+        volunteers:volunteers(
+          status,
+          event_id
+        )
+      `)
       .order('date', { ascending: true });
 
     if (error) {
@@ -20,7 +26,17 @@ export const eventApi = {
   async create(event: Omit<ApiEvent, 'id' | 'created_at'>) {
     const { data, error } = await supabase
       .from('events')
-      .insert([event])
+      .insert([{
+        title: event.title,
+        description: event.description,
+        location: event.location,
+        date: event.date,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        image_url: event.image_url,
+        max_participants: event.max_participants,
+        current_participants: 0
+      }])
       .select()
       .single();
 
@@ -70,8 +86,8 @@ export const eventApi = {
     if (fetchError) throw fetchError;
 
     const newCount = increment 
-      ? event.current_participants + 1 
-      : Math.max(0, event.current_participants - 1);
+      ? (event.current_participants || 0) + 1 
+      : Math.max(0, (event.current_participants || 0) - 1);
 
     if (increment && newCount > event.max_participants) {
       throw new Error('Maximum number of participants reached');
