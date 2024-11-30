@@ -4,11 +4,15 @@ import { useEventStore } from '../store/eventStore';
 import { RegistrationForm } from './volunteer/RegistrationForm';
 import { Loader2 } from 'lucide-react';
 import { TokenDisplay } from './volunteer/TokenDisplay';
+import { EventSearch } from './EventSearch';
+import { Event } from '../types/event';
 
 export const EventBoard: React.FC = () => {
   const { events, loading, error, fetchEvents } = useEventStore();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [registrationToken, setRegistrationToken] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
 
   useEffect(() => {
     fetchEvents();
@@ -21,6 +25,32 @@ export const EventBoard: React.FC = () => {
   const handleRegistrationSuccess = (token: string) => {
     setRegistrationToken(token);
     setSelectedEventId(null);
+  };
+
+  const filterEvents = (events: Event[]): Event[] => {
+    const now = new Date();
+    let filteredEvents = [...events];
+
+    // Apply filter
+    if (selectedFilter === 'upcoming') {
+      filteredEvents = filteredEvents.filter(event => new Date(event.date) > now);
+    } else if (selectedFilter === 'available') {
+      filteredEvents = filteredEvents.filter(event => 
+        new Date(event.date) > now && event.currentParticipants < event.maxParticipants
+      );
+    }
+
+    // Apply search
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filteredEvents = filteredEvents.filter(event =>
+        event.title.toLowerCase().includes(searchLower) ||
+        event.description.toLowerCase().includes(searchLower) ||
+        event.location.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return filteredEvents;
   };
 
   if (loading) {
@@ -47,16 +77,30 @@ export const EventBoard: React.FC = () => {
     );
   }
 
+  const filteredEvents = filterEvents(events);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-8 text-center">
         Événements à venir
       </h2>
-      {events.length === 0 ? (
-        <p className="text-center text-gray-600">Aucun événement à venir pour le moment.</p>
+
+      <EventSearch
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedFilter={selectedFilter}
+        onFilterChange={setSelectedFilter}
+      />
+
+      {filteredEvents.length === 0 ? (
+        <p className="text-center text-gray-600">
+          {searchTerm
+            ? "Aucun événement ne correspond à votre recherche."
+            : "Aucun événement à venir pour le moment."}
+        </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <EventCard
               key={event.id}
               event={event}
