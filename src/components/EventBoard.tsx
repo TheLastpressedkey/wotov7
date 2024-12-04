@@ -22,9 +22,11 @@ export const EventBoard: React.FC = () => {
     setSelectedEventId(eventId);
   };
 
-  const handleRegistrationSuccess = (token: string) => {
+  const handleRegistrationSuccess = async (token: string) => {
     setSelectedEventId(null);
     setConfirmationToken(token);
+    // Rafraîchir les données après l'inscription
+    await fetchEvents();
   };
 
   const filteredEvents = events.filter(event => {
