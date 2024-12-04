@@ -85,6 +85,26 @@ export interface Database {
           token?: string
         }
       }
+      volunteer_comments: {
+        Row: {
+          id: string
+          volunteer_token: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          volunteer_token: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          volunteer_token?: string
+          content?: string
+          created_at?: string
+        }
+      }
     }
   }
 }
