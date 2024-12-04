@@ -18,6 +18,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
   const [showTokenManagement, setShowTokenManagement] = useState(false);
   const getVolunteerStats = useVolunteerStore((state) => state.getVolunteerStats);
   const stats = getVolunteerStats(event.id!);
+  const presentParticipants = stats.present;
 
   const handleTokenManagementSuccess = () => {
     setShowTokenManagement(false);
@@ -62,7 +63,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
             </div>
             <div className="flex items-center text-gray-600">
               <Users className="w-5 h-5 mr-2" />
-              <span>{event.currentParticipants}/{event.maxParticipants} participants</span>
+              <span>{presentParticipants}/{event.maxParticipants} participants</span>
             </div>
           </div>
           {event.description && (
@@ -72,11 +73,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
             <div className="space-y-2">
               <button
                 onClick={onRegister}
-                disabled={event.currentParticipants >= event.maxParticipants}
+                disabled={presentParticipants >= event.maxParticipants}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 
                          disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {event.currentParticipants >= event.maxParticipants
+                {presentParticipants >= event.maxParticipants
                   ? 'Complet'
                   : "S'inscrire"}
               </button>
