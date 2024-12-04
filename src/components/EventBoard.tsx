@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { EventCard } from './EventCard';
+import { EventSearch } from './EventSearch';
 import { useEventStore } from '../store/eventStore';
 import { RegistrationForm } from './volunteer/RegistrationForm';
-import { Loader2, History } from 'lucide-react';
+import { TokenConfirmation } from './ui/TokenConfirmation';
+import { Loader2 } from 'lucide-react';
 import { EventFilter } from '../types/event';
 
 export const EventBoard: React.FC = () => {
   const { events, loading, error, fetchEvents } = useEventStore();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<EventFilter>('upcoming');
+  const [filter, setFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -19,23 +23,31 @@ export const EventBoard: React.FC = () => {
   };
 
   const handleRegistrationSuccess = (token: string) => {
-    alert(`Inscription réussie ! Votre token est : ${token}\nConservez ce token pour modifier votre inscription ultérieurement.`);
     setSelectedEventId(null);
+    setConfirmationToken(token);
   };
 
   const filteredEvents = events.filter(event => {
+    if (event.archived) return false;
+
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (event.description?.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const now = new Date();
     const eventDate = new Date(event.date);
 
-    if (event.archived) return false;
-
     switch (filter) {
       case 'upcoming':
-        return eventDate >= now;
+        return matchesSearch && eventDate >= now;
       case 'past':
-        return eventDate < now;
+        return matchesSearch && eventDate < now;
+      case 'full':
+        return matchesSearch && event.currentParticipants >= event.maxParticipants;
+      case 'available':
+        return matchesSearch && event.currentParticipants < event.maxParticipants;
       default:
-        return true;
+        return matchesSearch;
     }
   });
 
@@ -65,21 +77,23 @@ export const EventBoard: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold">
-          {filter === 'upcoming' ? 'Événements à venir' : 'Événements passés'}
-        </h2>
-        <button
-          onClick={() => setFilter(filter === 'upcoming' ? 'past' : 'upcoming')}
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
-        >
-          <History className="w-5 h-5" />
-          {filter === 'upcoming' ? 'Voir les événements passés' : 'Voir les événements à venir'}
-        </button>
-      </div>
+      <h2 className="text-3xl font-bold mb-8">Événements</h2>
+      
+      <EventSearch
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedFilter={filter}
+        onFilterChange={setFilter}
+      />
 
       {filteredEvents.length === 0 ? (
-        <p className="text-center text-gray-600">Aucun événement {filter === 'upcoming' ? 'à venir' : 'passé'} pour le moment.</p>
+        <div className="text-center py-12">
+          <p className="text-gray-600 text-lg">
+            {searchTerm 
+              ? "Aucun événement ne correspond à votre recherche."
+              : "Aucun événement disponible pour le moment."}
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.map((event) => (
@@ -87,7 +101,7 @@ export const EventBoard: React.FC = () => {
               key={event.id}
               event={event}
               onRegister={() => handleRegister(event.id!)}
-              isPast={filter === 'past'}
+              isPast={new Date(event.date) < new Date()}
             />
           ))}
         </div>
@@ -98,6 +112,13 @@ export const EventBoard: React.FC = () => {
           eventId={selectedEventId}
           onSuccess={handleRegistrationSuccess}
           onCancel={() => setSelectedEventId(null)}
+        />
+      )}
+
+      {confirmationToken && (
+        <TokenConfirmation
+          token={confirmationToken}
+          onClose={() => setConfirmationToken(null)}
         />
       )}
     </div>

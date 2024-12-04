@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useVolunteerStore } from '../../store/volunteerStore';
 import { VolunteerStatus } from '../../types/volunteer';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, CheckCircle } from 'lucide-react';
 
 interface TokenManagementProps {
   onClose: () => void;
@@ -12,6 +12,7 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
   const [status, setStatus] = useState<VolunteerStatus>('present');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const updateVolunteerStatus = useVolunteerStore((state) => state.updateVolunteerStatus);
 
@@ -27,7 +28,10 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
 
     try {
       await updateVolunteerStatus(token.trim(), status);
-      onClose();
+      setSuccess(true);
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     } catch (err) {
       console.error('Error updating volunteer status:', err);
       setError(
@@ -39,6 +43,18 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
       setIsSubmitting(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
+          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Statut mis à jour avec succès !</h2>
+          <p className="text-gray-600">Votre inscription a été mise à jour.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
