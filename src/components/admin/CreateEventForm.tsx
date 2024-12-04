@@ -28,18 +28,18 @@ export const CreateEventForm: React.FC = () => {
 
     try {
       // Ensure all required fields are filled
-      if (!formData.date || !formData.startTime || !formData.endTime) {
-        throw new Error('Tous les champs sont obligatoires');
+      if (!formData.date) {
+        throw new Error('La date est obligatoire');
       }
 
       const eventData = {
         title: formData.title.trim(),
-        description: formData.description.trim(),
+        description: formData.description.trim() || undefined,
         location: formData.location.trim(),
         date: new Date(formData.date),
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        imageUrl: formData.imageUrl.trim(),
+        startTime: formData.startTime || undefined,
+        endTime: formData.endTime || undefined,
+        imageUrl: formData.imageUrl.trim() || undefined,
         maxParticipants: Number(formData.maxParticipants),
         currentParticipants: 0,
       };
@@ -49,11 +49,11 @@ export const CreateEventForm: React.FC = () => {
 
       await addEvent(validatedData);
       navigate('/admin');
-    } catch (err) {
-      console.error('Error creating event:', err);
+    } catch (error) {
+      console.error('Error creating event:', error);
       setError(
-        err instanceof Error 
-          ? err.message 
+        error instanceof Error 
+          ? error.message 
           : "Une erreur est survenue lors de la création de l'événement"
       );
     } finally {
@@ -84,9 +84,10 @@ export const CreateEventForm: React.FC = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Description (facultative)
+        </label>
         <textarea
-          required
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -124,10 +125,11 @@ export const CreateEventForm: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Heure de début</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Heure de début (facultative)
+          </label>
           <input
             type="time"
-            required
             value={formData.startTime}
             onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -136,10 +138,11 @@ export const CreateEventForm: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Heure de fin</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Heure de fin (facultative)
+          </label>
           <input
             type="time"
-            required
             value={formData.endTime}
             onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -149,10 +152,11 @@ export const CreateEventForm: React.FC = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">URL de l'image</label>
+        <label className="block text-sm font-medium text-gray-700">
+          URL de l'image (facultative)
+        </label>
         <input
           type="url"
-          required
           value={formData.imageUrl}
           onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -162,7 +166,9 @@ export const CreateEventForm: React.FC = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Nombre maximum de participants</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Nombre maximum de participants
+        </label>
         <input
           type="number"
           required
