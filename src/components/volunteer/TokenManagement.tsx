@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useVolunteerStore } from '../../store/volunteerStore';
 import { VolunteerStatus } from '../../types/volunteer';
-import { Loader2, X, CheckCircle } from 'lucide-react';
+import { Loader2, X, Key } from 'lucide-react';
+import { Input } from '../ui/Input';
+import { ErrorMessage } from '../ui/ErrorMessage';
 
 interface TokenManagementProps {
   onClose: () => void;
@@ -12,7 +14,6 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
   const [status, setStatus] = useState<VolunteerStatus>('present');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const updateVolunteerStatus = useVolunteerStore((state) => state.updateVolunteerStatus);
 
@@ -28,76 +29,55 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
 
     try {
       await updateVolunteerStatus(token.trim(), status);
-      setSuccess(true);
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      onClose();
     } catch (err) {
       console.error('Error updating volunteer status:', err);
       setError(
-        err instanceof Error 
-          ? err.message 
-          : "Une erreur est survenue lors de la mise à jour du statut"
+        'Token invalide. Veuillez vérifier que vous avez correctement copié le token qui vous a été fourni lors de votre inscription. Si le problème persiste, contactez l\'organisateur.'
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (success) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
-          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Statut mis à jour avec succès !</h2>
-          <p className="text-gray-600">Votre inscription a été mise à jour.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-5 h-5" />
-        </button>
+      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Mettre à jour votre inscription</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
-        <h2 className="text-2xl font-bold mb-6">Mettre à jour votre inscription</h2>
-        
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-            {error}
-          </div>
+          <ErrorMessage message={error} className="mb-6" />
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Votre token
-            </label>
-            <input
-              type="text"
-              required
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              disabled={isSubmitting}
-              placeholder="Entrez votre token"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Input
+            label="Votre token"
+            icon={Key}
+            required
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            className="font-mono"
+            placeholder="Entrez votre token d'inscription"
+            disabled={isSubmitting}
+            helperText="Le token vous a été fourni lors de votre inscription"
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Statut de présence
+              Nouveau statut
             </label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as VolunteerStatus)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-700 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
               disabled={isSubmitting}
             >
               <option value="present">Présent</option>
@@ -106,24 +86,24 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
             </select>
           </div>
 
-          <div className="flex justify-end space-x-3 mt-6">
+          <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
               disabled={isSubmitting}
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                "Mettre à jour"
+                'Mettre à jour'
               )}
             </button>
           </div>
