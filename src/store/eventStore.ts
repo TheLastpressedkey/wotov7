@@ -9,6 +9,7 @@ interface EventStore {
   addEvent: (event: Omit<Event, 'id'>) => Promise<Event>;
   updateEvent: (id: string, updates: Partial<Event>) => Promise<Event>;
   removeEvent: (id: string) => Promise<void>;
+  toggleArchive: (id: string, archived: boolean) => Promise<Event>;
   fetchEvents: () => Promise<void>;
 }
 
@@ -23,7 +24,8 @@ export const useEventStore = create<EventStore>((set) => ({
       set((state) => ({ events: [...state.events, newEvent] }));
       return newEvent;
     } catch (error) {
-      throw error;
+      console.error('Error adding event:', error);
+      throw error instanceof Error ? error : new Error('Failed to add event');
     }
   },
 
@@ -32,12 +34,13 @@ export const useEventStore = create<EventStore>((set) => ({
       const updatedEvent = await eventService.updateEvent(id, updates);
       set((state) => ({
         events: state.events.map((event) =>
-          event.id === id ? updatedEvent : event
+          event.id === id ? { ...event, ...updatedEvent } : event
         ),
       }));
       return updatedEvent;
     } catch (error) {
-      throw error;
+      console.error('Error updating event:', error);
+      throw error instanceof Error ? error : new Error('Failed to update event');
     }
   },
 
@@ -48,7 +51,23 @@ export const useEventStore = create<EventStore>((set) => ({
         events: state.events.filter((event) => event.id !== id),
       }));
     } catch (error) {
-      throw error;
+      console.error('Error removing event:', error);
+      throw error instanceof Error ? error : new Error('Failed to remove event');
+    }
+  },
+
+  toggleArchive: async (id, archived) => {
+    try {
+      const updatedEvent = await eventService.toggleArchive(id, archived);
+      set((state) => ({
+        events: state.events.map((event) =>
+          event.id === id ? { ...event, ...updatedEvent } : event
+        ),
+      }));
+      return updatedEvent;
+    } catch (error) {
+      console.error('Error toggling archive:', error);
+      throw error instanceof Error ? error : new Error('Failed to toggle archive status');
     }
   },
 
@@ -58,7 +77,11 @@ export const useEventStore = create<EventStore>((set) => ({
       const events = await eventService.getAllEvents();
       set({ events, loading: false });
     } catch (error) {
-      set({ error: error instanceof Error ? error : new Error('Failed to fetch events'), loading: false });
+      console.error('Error fetching events:', error);
+      set({ 
+        error: error instanceof Error ? error : new Error('Failed to fetch events'), 
+        loading: false 
+      });
     }
   },
 }));
