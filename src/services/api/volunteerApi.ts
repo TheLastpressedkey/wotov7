@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/database';
 import type { Database } from '../../types/supabase';
 
 type ApiVolunteer = Database['public']['Tables']['volunteers']['Row'];
@@ -15,21 +15,6 @@ export const volunteerApi = {
       console.error('Error fetching volunteers:', error);
       throw new Error(`Erreur lors de la récupération des bénévoles: ${error.message}`);
     }
-    return data;
-  },
-
-  async getByToken(token: string) {
-    const { data, error } = await supabase
-      .from('volunteers')
-      .select('*')
-      .eq('token', token)
-      .single();
-
-    if (error) {
-      console.error('Error fetching volunteer by token:', error);
-      throw new Error('Token invalide');
-    }
-
     return data;
   },
 
@@ -59,6 +44,21 @@ export const volunteerApi = {
     if (error) {
       console.error('Error updating volunteer status:', error);
       throw new Error(`Erreur lors de la mise à jour du statut: ${error.message}`);
+    }
+
+    return data;
+  },
+
+  async getByToken(token: string) {
+    const { data, error } = await supabase
+      .from('volunteers')
+      .select('*')
+      .eq('token', token)
+      .single();
+
+    if (error) {
+      console.error('Error fetching volunteer by token:', error);
+      throw new Error(`Erreur lors de la récupération du bénévole: ${error.message}`);
     }
 
     return data;

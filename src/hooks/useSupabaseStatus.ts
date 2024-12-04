@@ -1,26 +1,21 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { checkConnection } from '../lib/database';
 
 export function useSupabaseStatus() {
   const [status, setStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
 
   useEffect(() => {
-    async function checkConnection() {
+    async function verifyConnection() {
       try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('id')
-          .limit(1);
-        
-        if (error) throw error;
-        setStatus('connected');
+        const isConnected = await checkConnection();
+        setStatus(isConnected ? 'connected' : 'error');
       } catch (error) {
         console.error('Database connection error:', error);
         setStatus('error');
       }
     }
 
-    checkConnection();
+    verifyConnection();
   }, []);
 
   return status;

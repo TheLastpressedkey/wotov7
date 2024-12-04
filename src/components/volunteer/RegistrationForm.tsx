@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useVolunteerStore } from '../../store/volunteerStore';
-import { useEventStore } from '../../store/eventStore';
 import { VolunteerStatus } from '../../types/volunteer';
 import { Loader2 } from 'lucide-react';
 
@@ -25,8 +24,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const addVolunteer = useVolunteerStore((state) => state.addVolunteer);
-  const events = useEventStore((state) => state.events);
-  const event = events.find(e => e.id === eventId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,15 +31,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setError(null);
 
     try {
-      // Vérifier si l'événement existe et s'il y a encore des places disponibles
-      if (!event) {
-        throw new Error("L'événement n'existe pas");
-      }
-
-      if (event.currentParticipants >= event.maxParticipants) {
-        throw new Error(`L'événement ${event.title} est à présent complet`);
-      }
-
       const volunteer = await addVolunteer({
         eventId,
         firstName: formData.firstName.trim(),

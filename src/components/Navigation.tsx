@@ -48,7 +48,7 @@ export const Navigation: React.FC = () => {
                 to="/login"
                 className="text-gray-600 hover:text-blue-600 transition-colors"
               >
-                Connexion
+                Connexion Admin
               </Link>
             )}
           </div>

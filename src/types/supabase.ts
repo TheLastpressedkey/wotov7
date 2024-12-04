@@ -13,41 +13,44 @@ export interface Database {
         Row: {
           id: string
           title: string
-          description: string
+          description: string | null
           location: string
           date: string
-          start_time: string
-          end_time: string
-          image_url: string
+          start_time: string | null
+          end_time: string | null
+          image_url: string | null
           max_participants: number
           current_participants: number
           created_at: string
+          archived: boolean
         }
         Insert: {
           id?: string
           title: string
-          description: string
+          description?: string | null
           location: string
           date: string
-          start_time: string
-          end_time: string
-          image_url: string
+          start_time?: string | null
+          end_time?: string | null
+          image_url?: string | null
           max_participants: number
           current_participants?: number
           created_at?: string
+          archived?: boolean
         }
         Update: {
           id?: string
           title?: string
-          description?: string
+          description?: string | null
           location?: string
           date?: string
-          start_time?: string
-          end_time?: string
-          image_url?: string
+          start_time?: string | null
+          end_time?: string | null
+          image_url?: string | null
           max_participants?: number
           current_participants?: number
           created_at?: string
+          archived?: boolean
         }
       }
       volunteers: {
