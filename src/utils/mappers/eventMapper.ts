@@ -1,14 +1,9 @@
 import type { Event } from '../../types/event';
 import type { Database } from '../../types/supabase';
 
-type ApiEvent = Database['public']['Tables']['events']['Row'] & {
-  volunteers?: Array<{ status: string; event_id: string; }>;
-};
+type ApiEvent = Database['public']['Tables']['events']['Row'];
 
 export function mapEventFromApi(apiEvent: ApiEvent): Event {
-  // Calculate present participants from volunteers
-  const presentParticipants = apiEvent.volunteers?.filter(v => v.status === 'present').length || 0;
-
   return {
     id: apiEvent.id,
     title: apiEvent.title,
@@ -19,24 +14,26 @@ export function mapEventFromApi(apiEvent: ApiEvent): Event {
     endTime: apiEvent.end_time,
     imageUrl: apiEvent.image_url,
     maxParticipants: apiEvent.max_participants,
-    currentParticipants: presentParticipants,
+    currentParticipants: apiEvent.current_participants,
+    archived: apiEvent.archived ?? false,
   };
 }
 
-export function mapEventToApi(event: Omit<Event, 'id'>): Omit<ApiEvent, 'id' | 'created_at' | 'volunteers'> {
+export function mapEventToApi(event: Omit<Event, 'id'>): Omit<ApiEvent, 'id' | 'created_at'> {
   const dateStr = event.date instanceof Date 
     ? event.date.toISOString().split('T')[0]
     : new Date(event.date).toISOString().split('T')[0];
 
   return {
     title: event.title,
-    description: event.description,
+    description: event.description || null,
     location: event.location,
     date: dateStr,
-    start_time: event.startTime,
-    end_time: event.endTime,
-    image_url: event.imageUrl,
+    start_time: event.startTime || null,
+    end_time: event.endTime || null,
+    image_url: event.imageUrl || null,
     max_participants: event.maxParticipants,
     current_participants: event.currentParticipants ?? 0,
+    archived: event.archived ?? false,
   };
 }
