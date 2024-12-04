@@ -14,6 +14,7 @@ export function mapVolunteerFromApi(apiVolunteer: ApiVolunteer): Volunteer {
     status: apiVolunteer.status,
     registrationDate: new Date(apiVolunteer.registration_date),
     token: apiVolunteer.token,
+    comments: [], // Initialize with empty array
   };
 }
 
