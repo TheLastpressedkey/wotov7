@@ -6,17 +6,25 @@ import { generateToken } from '../utils/token';
 
 export const volunteerService = {
   async getVolunteersByEvent(eventId: string): Promise<Volunteer[]> {
-    const data = await volunteerApi.getByEvent(eventId);
-    return data.map(mapVolunteerFromApi);
+    try {
+      const data = await volunteerApi.getByEvent(eventId);
+      return data.map(mapVolunteerFromApi);
+    } catch (error) {
+      console.error('Error getting volunteers:', error);
+      throw error;
+    }
   },
 
   async createVolunteer(volunteer: Omit<Volunteer, 'id' | 'token' | 'registrationDate'>): Promise<Volunteer> {
     try {
+      // Generate token first
       const token = generateToken();
       const apiVolunteer = mapVolunteerToApi({ ...volunteer, token });
       
+      // Create volunteer first
       const data = await volunteerApi.create(apiVolunteer);
       
+      // Only update participant count if the volunteer is marked as present
       if (volunteer.status === 'present') {
         await eventApi.updateParticipantCount(volunteer.eventId, true);
       }
