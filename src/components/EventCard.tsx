@@ -45,7 +45,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
           <div className="space-y-2 mb-4">
             <div className="flex items-center text-gray-600">
               <Calendar className="w-5 h-5 mr-2" />
-              <span>{format(new Date(event.date), 'PPP')}</span>
+             <span>{format(new Date(event.date), 'PPP', { locale: fr })}</span>
             </div>
             {(event.startTime || event.endTime) && (
               <div className="flex items-center text-gray-600">
