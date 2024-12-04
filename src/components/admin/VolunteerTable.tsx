@@ -3,8 +3,10 @@ import { useVolunteerStore } from '../../store/volunteerStore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Badge } from '../ui/Badge';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, MessageSquarePlus, MessageSquare } from 'lucide-react';
 import { Volunteer, VolunteerStatus } from '../../types/volunteer';
+import { CommentModal } from './CommentModal';
+import { CommentCell } from './CommentCell';
 
 interface VolunteerTableProps {
   eventId: string;
@@ -23,6 +25,7 @@ export const VolunteerTable: React.FC<VolunteerTableProps> = ({ eventId }) => {
   const volunteers = useVolunteerStore((state) => state.getVolunteersByEvent(eventId));
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(null);
 
   if (volunteers.length === 0) {
     return (
@@ -40,7 +43,6 @@ export const VolunteerTable: React.FC<VolunteerTableProps> = ({ eventId }) => {
         ? nameA.localeCompare(nameB)
         : nameB.localeCompare(nameA);
     } else {
-      // Sort by status
       const statusCompare = statusOrder[a.status] - statusOrder[b.status];
       return sortDirection === 'asc' ? statusCompare : -statusCompare;
     }
@@ -98,11 +100,17 @@ export const VolunteerTable: React.FC<VolunteerTableProps> = ({ eventId }) => {
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Token
             </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Commentaires
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {sortedVolunteers.map((volunteer) => (
-            <tr key={volunteer.id}>
+            <tr key={volunteer.id} className="group hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
                 {volunteer.firstName} {volunteer.lastName}
               </td>
@@ -118,10 +126,23 @@ export const VolunteerTable: React.FC<VolunteerTableProps> = ({ eventId }) => {
               <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-500">
                 {volunteer.token}
               </td>
+              <td className="px-6 py-4">
+                <CommentCell 
+                  volunteer={volunteer}
+                  onEdit={() => setSelectedVolunteer(volunteer)}
+                />
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {selectedVolunteer && (
+        <CommentModal
+          volunteer={selectedVolunteer}
+          onClose={() => setSelectedVolunteer(null)}
+        />
+      )}
     </div>
   );
 };
