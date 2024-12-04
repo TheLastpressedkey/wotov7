@@ -9,15 +9,17 @@ interface UpdateEventFormProps {
   onClose: () => void;
 }
 
+const DEFAULT_IMAGE = "https://plus.unsplash.com/premium_photo-1663039947303-0fad26f737b8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+
 export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose }) => {
   const [formData, setFormData] = useState({
     title: event.title,
-    description: event.description,
+    description: event.description || '',
     location: event.location,
     date: format(new Date(event.date), 'yyyy-MM-dd'),
-    startTime: event.startTime,
-    endTime: event.endTime,
-    imageUrl: event.imageUrl,
+    startTime: event.startTime || '',
+    endTime: event.endTime || '',
+    imageUrl: event.imageUrl || '',
     maxParticipants: event.maxParticipants,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,17 +33,23 @@ export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose
     setError(null);
 
     try {
-      await updateEvent(event.id!, {
+      const updatedEvent = {
         ...formData,
         date: new Date(formData.date),
         maxParticipants: Number(formData.maxParticipants),
-      });
+        description: formData.description.trim() || undefined,
+        startTime: formData.startTime || undefined,
+        endTime: formData.endTime || undefined,
+        imageUrl: formData.imageUrl.trim() || undefined,
+      };
+
+      await updateEvent(event.id!, updatedEvent);
       onClose();
-    } catch (err) {
-      console.error('Error updating event:', err);
+    } catch (error) {
+      console.error('Error updating event:', error);
       setError(
-        err instanceof Error 
-          ? err.message 
+        error instanceof Error 
+          ? error.message 
           : "Une erreur est survenue lors de la mise à jour de l'événement"
       );
     } finally {
@@ -81,9 +89,10 @@ export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Description (facultative)
+            </label>
             <textarea
-              required
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -121,10 +130,11 @@ export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Heure de début</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Heure de début (facultative)
+              </label>
               <input
                 type="time"
-                required
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -133,10 +143,11 @@ export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Heure de fin</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Heure de fin (facultative)
+              </label>
               <input
                 type="time"
-                required
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -146,14 +157,16 @@ export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">URL de l'image</label>
+            <label className="block text-sm font-medium text-gray-700">
+              URL de l'image (facultative)
+            </label>
             <input
               type="url"
-              required
               value={formData.imageUrl}
               onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               disabled={isSubmitting}
+              placeholder={DEFAULT_IMAGE}
             />
           </div>
 
