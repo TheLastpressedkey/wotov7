@@ -10,7 +10,9 @@ import {
   Calendar, 
   Users, 
   BarChart, 
-  Settings as SettingsIcon 
+  Settings as SettingsIcon,
+  Menu,
+  X 
 } from 'lucide-react';
 
 type Section = 'overview' | 'events' | 'volunteers' | 'statistics' | 'settings';
@@ -25,6 +27,7 @@ const sections = [
 
 export const AdminDashboard: React.FC = () => {
   const [currentSection, setCurrentSection] = useState<Section>('overview');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const renderSection = () => {
     switch (currentSection) {
@@ -44,8 +47,8 @@ export const AdminDashboard: React.FC = () => {
   return (
     <Layout>
       <div className="flex h-screen bg-gray-100">
-        {/* Sidebar */}
-        <div className="w-64 bg-white shadow-md">
+        {/* Sidebar pour desktop */}
+        <div className="hidden md:block w-64 bg-white shadow-md">
           <div className="p-4">
             <h2 className="text-xl font-bold text-gray-800">Administration</h2>
           </div>
@@ -67,9 +70,51 @@ export const AdminDashboard: React.FC = () => {
           </nav>
         </div>
 
+        {/* Header mobile */}
+        <div className="md:hidden fixed top-0 left-0 right-0 bg-white z-20 shadow-md">
+          <div className="flex items-center justify-between p-4">
+            <h2 className="text-lg font-bold text-gray-800">Administration</h2>
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 text-gray-600 hover:text-blue-600"
+            >
+              {isSidebarOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
+
+          {/* Navigation mobile */}
+          {isSidebarOpen && (
+            <div className="border-t border-gray-200">
+              <div className="bg-white">
+                {sections.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      setCurrentSection(id);
+                      setIsSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center px-4 py-3 text-left ${
+                      currentSection === id
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 mr-3" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
-          <div className="p-8">
+          <div className="md:p-8 p-4 mt-16 md:mt-0">
             {renderSection()}
           </div>
         </div>
