@@ -3,25 +3,26 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { EventBoard } from './components/EventBoard';
 import { Navigation } from './components/Navigation';
 import { LoginForm } from './components/auth/LoginForm';
-import { AdminLayout } from './components/admin/AdminLayout';
-import { AdminDashboard } from './components/admin/AdminDashboard';
+import { RegisterForm } from './components/auth/RegisterForm';
+import { Dashboard } from './components/Dashboard';
 import { CreateEventForm } from './components/admin/CreateEventForm';
+import { Footer } from './components/Footer';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <Navigation />
-        <main>
+        <main className="flex-grow">
           <Routes>
             <Route path="/" element={<EventBoard />} />
             <Route path="/login" element={<LoginForm />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="create-event" element={<CreateEventForm />} />
-            </Route>
+            <Route path="/register" element={<RegisterForm />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin/create-event" element={<CreateEventForm />} />
           </Routes>
         </main>
+        <Footer />
       </div>
     </Router>
   );

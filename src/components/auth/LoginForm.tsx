@@ -1,32 +1,56 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../../store/authStore';
-import { useNavigate } from 'react-router-dom';
-import { Lock, Loader2 } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Lock, Loader2, CheckCircle } from 'lucide-react';
+import { pb } from '../../lib/pocketbase';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   
-  const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSuccess(false);
 
     try {
-      await login(email, password);
-      navigate('/admin');
+      const authData = await pb.collection('users').authWithPassword(email, password);
+      
+      // Show success message
+      setSuccess(true);
+      
+      // Wait for success message to be shown
+      setTimeout(() => {
+        // Redirect based on user role
+        if (authData.record.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
+      }, 1500);
     } catch (err) {
       console.error('Login error:', err);
       setError('Identifiants invalides. Veuillez réessayer.');
-    } finally {
       setIsLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-lg shadow-md text-center">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Connexion réussie !</h2>
+          <p className="text-gray-600">Redirection en cours...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -36,7 +60,7 @@ export const LoginForm: React.FC = () => {
             <Lock className="h-6 w-6 text-blue-600" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Connexion Administrateur
+            Connexion
           </h2>
         </div>
         
@@ -88,6 +112,18 @@ export const LoginForm: React.FC = () => {
                 'Se connecter'
               )}
             </button>
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Vous n'avez pas de compte ?{' '}
+              <Link
+                to="/register"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Inscrivez-vous
+              </Link>
+            </p>
           </div>
         </form>
       </div>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useEventStore } from '../../store/eventStore';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { eventSchema } from '../../types/event';
+import { pb } from '../../lib/pocketbase';
+import type { EventRecord } from '../../types/pocketbase';
 
 export const CreateEventForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -14,11 +14,12 @@ export const CreateEventForm: React.FC = () => {
     endTime: '',
     imageUrl: '',
     maxParticipants: 1,
+    currentParticipants: 0,
+    archived: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const addEvent = useEventStore((state) => state.addEvent);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,19 +37,17 @@ export const CreateEventForm: React.FC = () => {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
         location: formData.location.trim(),
-        date: new Date(formData.date),
+        date: new Date(formData.date).toISOString(),
         startTime: formData.startTime || undefined,
         endTime: formData.endTime || undefined,
         imageUrl: formData.imageUrl.trim() || undefined,
         maxParticipants: Number(formData.maxParticipants),
         currentParticipants: 0,
+        archived: false
       };
 
-      // Validate the event data
-      const validatedData = eventSchema.parse(eventData);
-
-      await addEvent(validatedData);
-      navigate('/admin');
+      await pb.collection('events').create(eventData);
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error creating event:', error);
       setError(

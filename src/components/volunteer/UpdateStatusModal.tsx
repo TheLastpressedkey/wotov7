@@ -1,45 +1,41 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { X, Loader2 } from 'lucide-react';
-import { pb } from '../../lib/pocketbase';
+import { updateRegistrationStatus } from '../../lib/pocketbase';
 
-interface TokenManagementProps {
+interface UpdateStatusModalProps {
+  eventId: string;
+  token: string;
+  currentStatus: 'present' | 'absent' | 'undecided';
   onClose: () => void;
+  onUpdate: () => void;
 }
 
-export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => {
-  const [token, setToken] = useState('');
+export const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
+  eventId,
+  token,
+  currentStatus,
+  onClose,
+  onUpdate,
+}) => {
+  const [status, setStatus] = useState<'present' | 'absent' | 'undecided'>(currentStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token.trim()) {
-      setError('Veuillez entrer votre token');
-      return;
-    }
-
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Vérifier si le token existe
-      const events = await pb.collection('events').getFullList();
-      const event = events.find(e => e.registrations?.some(r => r.token === token.trim()));
-      
-      if (!event) {
-        throw new Error('Token invalide');
-      }
-
-      // Rediriger vers le dashboard
-      navigate('/dashboard');
+      await updateRegistrationStatus(eventId, token, status);
+      onUpdate();
+      onClose();
     } catch (err) {
-      console.error('Error verifying token:', err);
+      console.error('Error updating status:', err);
       setError(
         err instanceof Error 
           ? err.message 
-          : "Une erreur est survenue lors de la vérification du token"
+          : "Une erreur est survenue lors de la mise à jour du statut"
       );
     } finally {
       setIsSubmitting(false);
@@ -56,7 +52,7 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-2xl font-bold mb-6">Gérer votre inscription</h2>
+        <h2 className="text-2xl font-bold mb-6">Modifier mon statut</h2>
         
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
@@ -67,17 +63,18 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Votre token
+              Statut de présence
             </label>
-            <input
-              type="text"
-              required
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as 'present' | 'absent' | 'undecided')}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               disabled={isSubmitting}
-              placeholder="Entrez votre token"
-            />
+            >
+              <option value="present">Présent</option>
+              <option value="absent">Absent</option>
+              <option value="undecided">Indécis</option>
+            </select>
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">
@@ -97,7 +94,7 @@ export const TokenManagement: React.FC<TokenManagementProps> = ({ onClose }) => 
               {isSubmitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                "Vérifier"
+                "Mettre à jour"
               )}
             </button>
           </div>

@@ -1,8 +1,21 @@
 import React, { useState } from 'react';
-import { useEventStore } from '../../store/eventStore';
-import { Event } from '../../types/event';
-import { Loader2, X } from 'lucide-react';
+import { X, Loader2, CheckCircle } from 'lucide-react';
+import { pb } from '../../lib/pocketbase';
 import { format } from 'date-fns';
+
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  startTime?: string;
+  endTime?: string;
+  imageUrl?: string;
+  maxParticipants: number;
+  currentParticipants: number;
+  archived: boolean;
+}
 
 interface UpdateEventFormProps {
   event: Event;
@@ -24,8 +37,7 @@ export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const updateEvent = useEventStore((state) => state.updateEvent);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,18 +45,22 @@ export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose
     setError(null);
 
     try {
-      const updatedEvent = {
-        ...formData,
-        date: new Date(formData.date),
+      const data = {
+        title: formData.title.trim(),
+        description: formData.description.trim() || null,
+        location: formData.location.trim(),
+        date: new Date(formData.date).toISOString(),
+        startTime: formData.startTime || null,
+        endTime: formData.endTime || null,
+        imageUrl: formData.imageUrl.trim() || null,
         maxParticipants: Number(formData.maxParticipants),
-        description: formData.description.trim() || undefined,
-        startTime: formData.startTime || undefined,
-        endTime: formData.endTime || undefined,
-        imageUrl: formData.imageUrl.trim() || undefined,
       };
 
-      await updateEvent(event.id!, updatedEvent);
-      onClose();
+      await pb.collection('events').update(event.id, data);
+      setSuccess(true);
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     } catch (error) {
       console.error('Error updating event:', error);
       setError(
@@ -52,10 +68,21 @@ export const UpdateEventForm: React.FC<UpdateEventFormProps> = ({ event, onClose
           ? error.message 
           : "Une erreur est survenue lors de la mise à jour de l'événement"
       );
-    } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Modification réussie !</h2>
+          <p className="text-gray-600">L'événement a été mis à jour avec succès.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

@@ -1,109 +1,74 @@
-import { supabase } from '../../lib/database';
-import type { Database } from '../../types/supabase';
-
-type ApiEvent = Database['public']['Tables']['events']['Row'];
+import { pb } from '../../lib/pocketbase';
 
 export const eventApi = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .order('date', { ascending: true });
-
-    if (error) {
+    try {
+      const records = await pb.collection('events').getList(1, 50, {
+        sort: '+date',
+      });
+      return records.items;
+    } catch (error) {
       console.error('Error fetching events:', error);
-      throw new Error(`Erreur lors de la récupération des événements: ${error.message}`);
+      throw new Error(`Erreur lors de la récupération des événements: ${error}`);
     }
-    return data;
   },
 
-  async create(event: Omit<ApiEvent, 'id' | 'created_at'>) {
-    const { data, error } = await supabase
-      .from('events')
-      .insert([event])
-      .select()
-      .single();
-
-    if (error) {
+  async create(event: Omit<any, 'id' | 'created' | 'updated'>) {
+    try {
+      const record = await pb.collection('events').create(event);
+      return record;
+    } catch (error) {
       console.error('Error creating event:', error);
-      throw new Error(`Erreur lors de la création de l'événement: ${error.message}`);
+      throw new Error(`Erreur lors de la création de l'événement: ${error}`);
     }
-
-    return data;
   },
 
-  async update(id: string, updates: Partial<ApiEvent>) {
-    const { data, error } = await supabase
-      .from('events')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
+  async update(id: string, updates: any) {
+    try {
+      const record = await pb.collection('events').update(id, updates);
+      return record;
+    } catch (error) {
       console.error('Error updating event:', error);
-      throw new Error(`Erreur lors de la mise à jour de l'événement: ${error.message}`);
+      throw new Error(`Erreur lors de la mise à jour de l'événement: ${error}`);
     }
-
-    return data;
   },
 
   async delete(id: string) {
-    const { error } = await supabase
-      .from('events')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
+    try {
+      await pb.collection('events').delete(id);
+    } catch (error) {
       console.error('Error deleting event:', error);
-      throw new Error(`Erreur lors de la suppression de l'événement: ${error.message}`);
+      throw new Error(`Erreur lors de la suppression de l'événement: ${error}`);
     }
   },
 
   async updateParticipantCount(id: string, increment: boolean = true) {
-    const { data: event, error: fetchError } = await supabase
-      .from('events')
-      .select('current_participants, max_participants')
-      .eq('id', id)
-      .single();
+    try {
+      const record = await pb.collection('events').getOne(id);
+      const newCount = increment 
+        ? record.currentParticipants + 1 
+        : Math.max(0, record.currentParticipants - 1);
 
-    if (fetchError) {
-      console.error('Error fetching event:', fetchError);
-      throw new Error(`Erreur lors de la récupération de l'événement: ${fetchError.message}`);
-    }
+      if (increment && newCount > record.maxParticipants) {
+        throw new Error('Maximum number of participants reached');
+      }
 
-    const newCount = increment 
-      ? event.current_participants + 1 
-      : Math.max(0, event.current_participants - 1);
-
-    if (increment && newCount > event.max_participants) {
-      throw new Error('Maximum number of participants reached');
-    }
-
-    const { error: updateError } = await supabase
-      .from('events')
-      .update({ current_participants: newCount })
-      .eq('id', id);
-
-    if (updateError) {
-      console.error('Error updating participant count:', updateError);
-      throw new Error(`Erreur lors de la mise à jour du nombre de participants: ${updateError.message}`);
+      await pb.collection('events').update(id, {
+        currentParticipants: newCount
+      });
+    } catch (error) {
+      console.error('Error updating participant count:', error);
+      throw new Error(`Erreur lors de la mise à jour du nombre de participants: ${error}`);
     }
   },
 
   async toggleArchive(id: string, archived: boolean) {
-    const { data, error } = await supabase
-      .from('events')
-      .update({ archived })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
+    try {
+      const record = await pb.collection('events').update(id, { archived });
+      return record;
+    } catch (error) {
       console.error('Error toggling archive status:', error);
-      throw new Error(`Erreur lors de la modification du statut d'archive: ${error.message}`);
+      throw new Error(`Erreur lors de la modification du statut d'archive: ${error}`);
     }
-
-    return data;
   }
 };
