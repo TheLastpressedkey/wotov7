@@ -175,7 +175,7 @@ export const UserDashboard: React.FC = () => {
       endDate,
       startTime: event.startTime || '09:00',
       endTime: event.endTime || '18:00',
-      options: ['Google', 'Apple', 'Microsoft365', 'Outlook.com', 'iCal'],
+      options: ['Google', 'Apple', 'Outlook', 'iCal'],
       timeZone: "Europe/Paris"
     };
   };
@@ -185,7 +185,7 @@ export const UserDashboard: React.FC = () => {
       <div className="bg-white shadow-sm p-4 sticky top-0 z-10 md:hidden">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">
-            Bonjour {user?.name?.split(' ')[0]} 👋
+            Bonjour {user?.surname} 👋
           </h1>
           <button
             onClick={() => setIsFilterVisible(!isFilterVisible)}
@@ -282,7 +282,7 @@ export const UserDashboard: React.FC = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Bonjour {user?.name} 👋
+              Bonjour {user?.surname} 👋
             </h1>
             <p className="text-gray-600">
               Bienvenue sur votre tableau de bord
@@ -607,7 +607,7 @@ export const UserDashboard: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                          <div className={`ml-4 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(registration.status)}`}>
+                          <div className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(registration.status)}`}>
                             {getStatusText(registration.status)}
                           </div>
                         </div>
