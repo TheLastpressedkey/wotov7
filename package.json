@@ -22,7 +22,8 @@
     "pocketbase": "^0.21.1",
     "chart.js": "^4.4.1",
     "react-chartjs-2": "^5.2.0",
-    "add-to-calendar-button-react": "^2.6.9"
+    "add-to-calendar-button-react": "^2.6.9",
+    "react-share": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
