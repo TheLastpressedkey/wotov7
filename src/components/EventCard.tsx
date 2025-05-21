@@ -1,10 +1,9 @@
 import React from 'react';
-import { Calendar, MapPin, Users, Clock, Info } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { pb } from '../lib/pocketbase';
-import type { EventRecord } from '../types/pocketbase';
 
 interface EventCardProps {
   event: EventRecord;
@@ -19,6 +18,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
   const user = pb.authStore.model;
 
   const presentParticipants = event.registrations?.filter(reg => reg.status === 'present').length || 0;
+  const isEventFull = presentParticipants >= event.maxParticipants;
 
   const userRegistration = event.registrations?.find(
     reg => reg.userId === user?.id
@@ -42,7 +42,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
       className={`bg-white rounded-lg shadow-md overflow-hidden flex flex-col ${isPast ? 'opacity-75' : ''} cursor-pointer transform transition-transform hover:scale-[1.02]`}
       onClick={() => navigate(`/event/${event.id}`)}
     >
-      <div className={`relative ${isPast ? 'grayscale' : ''}`}>
+      <div className={`relative ${isPast || isEventFull ? 'grayscale' : ''}`}>
         <img
           src={event.imageUrl || DEFAULT_IMAGE}
           alt={event.title}
@@ -86,16 +86,16 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
                 e.stopPropagation();
                 handleAction();
               }}
-              disabled={!userRegistration && presentParticipants >= event.maxParticipants}
+              disabled={isEventFull && !userRegistration}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 
                        disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
             >
-              {!pb.authStore.isValid 
+              {isEventFull && !userRegistration
+                ? "Évènement complet"
+                : !pb.authStore.isValid
                 ? "Se connecter pour s'inscrire"
                 : userRegistration
                 ? "Gérer mon inscription"
-                : presentParticipants >= event.maxParticipants
-                ? "Complet"
                 : "S'inscrire"}
             </button>
           </div>
