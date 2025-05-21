@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Calendar, MapPin, Users, Clock, ArrowLeft, Loader2, Copy, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, ArrowLeft, Loader2, Copy, CheckCircle, Share2 } from 'lucide-react';
 import { pb } from '../lib/pocketbase';
 import type { EventRecord } from '../types/pocketbase';
 import { RegistrationForm } from './volunteer/RegistrationForm';
 import { TokenConfirmation } from './ui/TokenConfirmation';
+import { 
+  FacebookShareButton, 
+  FacebookMessengerShareButton, 
+  WhatsappShareButton,
+  FacebookIcon,
+  WhatsappIcon,
+  FacebookMessengerIcon
+} from 'react-share';
 
 const DEFAULT_IMAGE = "https://plus.unsplash.com/premium_photo-1663039947303-0fad26f737b8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
@@ -19,6 +27,7 @@ export const EventDetail: React.FC = () => {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const user = pb.authStore.model;
 
   useEffect(() => {
@@ -37,7 +46,7 @@ export const EventDetail: React.FC = () => {
       } catch (err) {
         console.error('Error fetching event:', err);
         setError('Une erreur est survenue lors du chargement de l\'événement');
-        navigate('/', { replace: true }); // Redirection vers la page d'accueil en cas d'erreur
+        navigate('/', { replace: true });
       } finally {
         setLoading(false);
       }
@@ -102,6 +111,8 @@ export const EventDetail: React.FC = () => {
 
   const presentParticipants = event.registrations?.filter(reg => reg.status === 'present') || [];
   const userRegistration = event.registrations?.find(reg => reg.userId === user?.id);
+  const shareUrl = window.location.href;
+  const shareTitle = `${event.title} - Wings of the Ocean`;
 
   const formattedDescription = event.description?.split('\n').map((paragraph, index) => (
     <p key={index} className="mb-4 last:mb-0 leading-relaxed text-gray-600">
@@ -122,23 +133,54 @@ export const EventDetail: React.FC = () => {
             Retour aux événements
           </button>
 
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-blue-600 bg-white rounded-md shadow-sm border border-gray-200 transition-colors"
-            title="Copier le lien"
-          >
-            {linkCopied ? (
-              <>
-                <CheckCircle className="w-5 h-5" />
-                <span>Lien copié !</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-5 h-5" />
-                <span>Copier le lien</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowShareMenu(!showShareMenu)}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-blue-600 bg-white rounded-md shadow-sm border border-gray-200 transition-colors"
+              >
+                <Share2 className="w-5 h-5" />
+                <span className="hidden sm:inline">Partager</span>
+              </button>
+
+              {showShareMenu && (
+                <div className="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                  <div className="px-4 py-2 space-y-2">
+                    <FacebookShareButton url={shareUrl} quote={shareTitle} className="w-full">
+                      <div className="flex items-center gap-2 text-gray-700 hover:text-blue-600 py-1">
+                        <FacebookIcon size={24} round />
+                        <span className="text-sm">Facebook</span>
+                      </div>
+                    </FacebookShareButton>
+
+                    <FacebookMessengerShareButton url={shareUrl} appId="your-app-id" className="w-full">
+                      <div className="flex items-center gap-2 text-gray-700 hover:text-blue-600 py-1">
+                        <FacebookMessengerIcon size={24} round />
+                        <span className="text-sm">Messenger</span>
+                      </div>
+                    </FacebookMessengerShareButton>
+
+                    <WhatsappShareButton url={shareUrl} title={shareTitle} className="w-full">
+                      <div className="flex items-center gap-2 text-gray-700 hover:text-green-600 py-1">
+                        <WhatsappIcon size={24} round />
+                        <span className="text-sm">WhatsApp</span>
+                      </div>
+                    </WhatsappShareButton>
+
+                    <button
+                      onClick={handleShare}
+                      className="w-full flex items-center gap-2 text-gray-700 hover:text-blue-600 py-1"
+                    >
+                      <Copy className="w-6 h-6" />
+                      <span className="text-sm">
+                        {linkCopied ? 'Lien copié !' : 'Copier le lien'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Image de couverture */}
