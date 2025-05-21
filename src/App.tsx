@@ -6,6 +6,7 @@ import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { Dashboard } from './components/Dashboard';
 import { CreateEventForm } from './components/admin/CreateEventForm';
+import { EventDetail } from './components/EventDetail';
 import { Footer } from './components/Footer';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<EventBoard />} />
+            <Route path="/event/:id" element={<EventDetail />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
             <Route path="/dashboard" element={<Dashboard />} />
