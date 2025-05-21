@@ -19,6 +19,7 @@ export const EventDetail: React.FC = () => {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const user = pb.authStore.model;
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -57,6 +58,19 @@ export const EventDetail: React.FC = () => {
     }
   };
 
+  const handleRegistrationClick = () => {
+    if (!pb.authStore.isValid) {
+      navigate('/login');
+      return;
+    }
+    
+    if (userRegistration) {
+      navigate('/dashboard');
+    } else {
+      setShowRegistrationForm(true);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -82,6 +96,7 @@ export const EventDetail: React.FC = () => {
   }
 
   const presentParticipants = event.registrations?.filter(reg => reg.status === 'present') || [];
+  const userRegistration = event.registrations?.find(reg => reg.userId === user?.id);
 
   const formattedDescription = event.description?.split('\n').map((paragraph, index) => (
     <p key={index} className="mb-4 last:mb-0 leading-relaxed text-gray-600">
@@ -175,12 +190,16 @@ export const EventDetail: React.FC = () => {
           {new Date(event.date) > new Date() && (
             <div className="mt-8 pt-6 border-t border-gray-100">
               <button
-                onClick={() => setShowRegistrationForm(true)}
-                disabled={presentParticipants.length >= event.maxParticipants}
+                onClick={handleRegistrationClick}
+                disabled={!userRegistration && presentParticipants.length >= event.maxParticipants}
                 className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 
                          disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {presentParticipants.length >= event.maxParticipants
+                {!pb.authStore.isValid 
+                  ? "Se connecter pour s'inscrire"
+                  : userRegistration
+                  ? "Gérer mon inscription"
+                  : presentParticipants.length >= event.maxParticipants
                   ? "Complet"
                   : "S'inscrire à l'événement"}
               </button>
