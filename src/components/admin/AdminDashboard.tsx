@@ -11,9 +11,10 @@ import {
   Users, 
   BarChart, 
   Settings as SettingsIcon,
-  Menu,
-  X 
+  Plus,
+  Search
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type Section = 'overview' | 'events' | 'volunteers' | 'statistics' | 'settings';
 
@@ -27,7 +28,8 @@ const sections = [
 
 export const AdminDashboard: React.FC = () => {
   const [currentSection, setCurrentSection] = useState<Section>('overview');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   const renderSection = () => {
     switch (currentSection) {
@@ -70,52 +72,61 @@ export const AdminDashboard: React.FC = () => {
           </nav>
         </div>
 
-        {/* Header mobile */}
-        <div className="md:hidden fixed top-0 left-0 right-0 bg-white z-20 shadow-md">
-          <div className="flex items-center justify-between p-4">
-            <h2 className="text-lg font-bold text-gray-800">Administration</h2>
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 text-gray-600 hover:text-blue-600"
-            >
-              {isSidebarOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-          </div>
+        {/* Contenu principal */}
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          {/* Header mobile */}
+          <div className="md:hidden bg-white shadow-sm z-20">
+            <div className="flex items-center justify-between p-4">
+              <h2 className="text-lg font-bold text-gray-800">
+                {sections.find(s => s.id === currentSection)?.label}
+              </h2>
+              <button
+                onClick={() => navigate('/admin/create-event')}
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
+                title="Créer un événement"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </div>
 
-          {/* Navigation mobile */}
-          {isSidebarOpen && (
-            <div className="border-t border-gray-200">
-              <div className="bg-white">
-                {sections.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => {
-                      setCurrentSection(id);
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center px-4 py-3 text-left ${
-                      currentSection === id
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5 mr-3" />
-                    {label}
-                  </button>
-                ))}
+            {/* Barre de recherche mobile */}
+            <div className="px-4 pb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto">
-          <div className="md:p-8 p-4 mt-16 md:mt-0">
-            {renderSection()}
+          {/* Main Content */}
+          <div className="flex-1 overflow-auto bg-gray-50 pb-20 md:pb-0">
+            <div className="p-4 md:p-8">
+              {renderSection()}
+            </div>
+          </div>
+
+          {/* Navigation mobile bottom */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center">
+            {sections.map(({ id, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setCurrentSection(id)}
+                className={`flex-1 py-3 flex flex-col items-center justify-center ${
+                  currentSection === id
+                    ? 'text-blue-600'
+                    : 'text-gray-600'
+                }`}
+              >
+                <Icon className="w-6 h-6" />
+                <span className="text-xs mt-1">{id === 'overview' ? 'Accueil' : sections.find(s => s.id === id)?.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
