@@ -6,6 +6,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Settings } from './Settings';
 import { UpdateStatusModal } from '../volunteer/UpdateStatusModal';
+import { AddToCalendarButton } from 'add-to-calendar-button-react';
 
 type View = 'overview' | 'events' | 'settings';
 type StatusFilter = 'all' | 'present' | 'absent' | 'undecided';
@@ -117,7 +118,6 @@ export const UserDashboard: React.FC = () => {
     }
   };
 
-  // Calcul des statistiques
   const now = new Date();
   const startMonth = startOfMonth(now);
   const endMonth = endOfMonth(now);
@@ -163,9 +163,25 @@ export const UserDashboard: React.FC = () => {
       }
     });
 
+  const formatEventForCalendar = (event: Event) => {
+    const startDate = format(new Date(event.date), 'yyyy-MM-dd');
+    const endDate = format(new Date(event.date), 'yyyy-MM-dd');
+    
+    return {
+      name: event.title,
+      description: event.description || '',
+      location: event.location,
+      startDate,
+      endDate,
+      startTime: event.startTime || '09:00',
+      endTime: event.endTime || '18:00',
+      options: ['Google', 'Apple', 'Microsoft365', 'Outlook.com', 'iCal'],
+      timeZone: "Europe/Paris"
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header mobile */}
       <div className="bg-white shadow-sm p-4 sticky top-0 z-10 md:hidden">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">
@@ -179,7 +195,6 @@ export const UserDashboard: React.FC = () => {
           </button>
         </div>
         
-        {/* Navigation mobile */}
         <div className="flex mt-4 border rounded-lg overflow-hidden">
           <button
             onClick={() => setView('overview')}
@@ -213,7 +228,6 @@ export const UserDashboard: React.FC = () => {
           </button>
         </div>
 
-        {/* Filtres mobiles */}
         {view === 'events' && isFilterVisible && (
           <div className="mt-4 space-y-3 p-4 bg-gray-50 rounded-lg">
             <div className="relative">
@@ -264,7 +278,6 @@ export const UserDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Header desktop */}
       <div className="hidden md:block max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -313,11 +326,9 @@ export const UserDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenu principal */}
       <div className="max-w-7xl mx-auto px-4 pb-8">
         {view === 'overview' && (
           <div className="space-y-6">
-            {/* Stats cards - version mobile */}
             <div className="grid grid-cols-2 gap-4 md:hidden">
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <p className="text-sm text-gray-500">Ce mois</p>
@@ -341,7 +352,6 @@ export const UserDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Stats cards - version desktop */}
             <div className="hidden md:grid md:grid-cols-4 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex items-center justify-between">
@@ -388,7 +398,6 @@ export const UserDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Prochains événements */}
             <div className="bg-white rounded-lg shadow-sm md:shadow-md">
               <div className="p-4 border-b">
                 <h2 className="text-lg font-semibold">Vos prochains événements</h2>
@@ -432,7 +441,6 @@ export const UserDashboard: React.FC = () => {
 
         {view === 'events' && (
           <div className="space-y-4">
-            {/* Desktop filters */}
             <div className="hidden md:flex justify-between items-center bg-white p-4 rounded-lg shadow-md">
               <div className="flex items-center space-x-4">
                 <div className="relative w-64">
@@ -474,7 +482,6 @@ export const UserDashboard: React.FC = () => {
               </select>
             </div>
 
-            {/* Events list */}
             <div className="bg-white rounded-lg shadow-md">
               {loading ? (
                 <div className="text-center py-8">
@@ -511,6 +518,8 @@ export const UserDashboard: React.FC = () => {
                   {filteredAndSortedEvents.map((event) => {
                     const registration = event.registrations?.find(reg => reg.userId === user.id);
                     if (!registration) return null;
+                    
+                    const calendarEvent = formatEventForCalendar(event);
                     
                     return (
                       <div key={event.id} className="p-4 hover:bg-gray-50">
@@ -550,16 +559,32 @@ export const UserDashboard: React.FC = () => {
                                   {registration.token}
                                 </code>
                               </div>
-                              <button 
-                                onClick={() => setUpdateStatusInfo({
-                                  eventId: event.id,
-                                  token: registration.token,
-                                  currentStatus: registration.status
-                                })}
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                              >
-                                Modifier mon statut
-                              </button>
+                              <div className="flex items-center gap-4">
+                                <AddToCalendarButton
+                                  name={calendarEvent.name}
+                                  description={calendarEvent.description}
+                                  location={calendarEvent.location}
+                                  startDate={calendarEvent.startDate}
+                                  endDate={calendarEvent.endDate}
+                                  startTime={calendarEvent.startTime}
+                                  endTime={calendarEvent.endTime}
+                                  timeZone={calendarEvent.timeZone}
+                                  options={calendarEvent.options}
+                                  buttonStyle="text"
+                                  hideTextLabelButton
+                                  size="2"
+                                />
+                                <button 
+                                  onClick={() => setUpdateStatusInfo({
+                                    eventId: event.id,
+                                    token: registration.token,
+                                    currentStatus: registration.status
+                                  })}
+                                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                >
+                                  Modifier mon statut
+                                </button>
+                              </div>
                             </div>
                           </div>
                           <div className={`ml-4 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(registration.status)}`}>
