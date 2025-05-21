@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ArrowLeft, Download, MapPin, Calendar, Clock, Users } from 'lucide-react';
+import { ArrowLeft, Download, MapPin, Calendar, Clock, Users, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Badge } from '../../ui/Badge';
+import { VolunteerStatusModal } from '../VolunteerStatusModal';
+import { pb } from '../../../lib/pocketbase';
 
 interface Participant {
   userId: string;
@@ -32,10 +34,20 @@ interface EventParticipantsViewProps {
 }
 
 export const EventParticipantsView: React.FC<EventParticipantsViewProps> = ({ event, onBack }) => {
+  const [selectedVolunteer, setSelectedVolunteer] = useState<Participant | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const participants = event.registrations || [];
   const presentParticipants = participants.filter(p => p.status === 'present');
   const absentParticipants = participants.filter(p => p.status === 'absent');
   const undecidedParticipants = participants.filter(p => p.status === 'undecided');
+
+  const showSuccessMessage = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
 
   const downloadParticipantsList = () => {
     const csvContent = [
@@ -54,6 +66,31 @@ export const EventParticipantsView: React.FC<EventParticipantsViewProps> = ({ ev
     link.href = URL.createObjectURL(blob);
     link.download = `participants_${event.title}_${format(new Date(event.date), 'yyyy-MM-dd')}.csv`;
     link.click();
+  };
+
+  const handleStatusUpdate = () => {
+    showSuccessMessage('Le statut du bénévole a été mis à jour avec succès');
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleDeleteParticipant = async (token: string) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette inscription ?')) {
+      return;
+    }
+
+    setIsDeleting(token);
+    try {
+      const updatedRegistrations = participants.filter(p => p.token !== token);
+      await pb.collection('events').update(event.id, {
+        registrations: updatedRegistrations
+      });
+      showSuccessMessage('L\'inscription a été supprimée avec succès');
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error deleting participant:', error);
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   return (
@@ -78,6 +115,12 @@ export const EventParticipantsView: React.FC<EventParticipantsViewProps> = ({ ev
           Exporter la liste
         </button>
       </div>
+
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
+          {successMessage}
+        </div>
+      )}
 
       {/* Event Details */}
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -161,6 +204,9 @@ export const EventParticipantsView: React.FC<EventParticipantsViewProps> = ({ ev
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Inscription
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -197,6 +243,29 @@ export const EventParticipantsView: React.FC<EventParticipantsViewProps> = ({ ev
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {format(new Date(participant.registrationDate), 'Pp', { locale: fr })}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => setSelectedVolunteer(participant)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Modifier le statut"
+                        >
+                          <Pencil className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteParticipant(participant.token)}
+                          disabled={isDeleting === participant.token}
+                          className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                          title="Supprimer l'inscription"
+                        >
+                          {isDeleting === participant.token ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -204,6 +273,15 @@ export const EventParticipantsView: React.FC<EventParticipantsViewProps> = ({ ev
           </div>
         </div>
       </div>
+
+      {selectedVolunteer && (
+        <VolunteerStatusModal
+          eventId={event.id}
+          volunteer={selectedVolunteer}
+          onClose={() => setSelectedVolunteer(null)}
+          onUpdate={handleStatusUpdate}
+        />
+      )}
     </div>
   );
 };
