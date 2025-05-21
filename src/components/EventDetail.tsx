@@ -23,7 +23,11 @@ export const EventDetail: React.FC = () => {
 
   useEffect(() => {
     const fetchEvent = async () => {
-      if (!id) return;
+      if (!id) {
+        setError('Événement non trouvé');
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
@@ -33,13 +37,14 @@ export const EventDetail: React.FC = () => {
       } catch (err) {
         console.error('Error fetching event:', err);
         setError('Une erreur est survenue lors du chargement de l\'événement');
+        navigate('/', { replace: true }); // Redirection vers la page d'accueil en cas d'erreur
       } finally {
         setLoading(false);
       }
     };
 
     fetchEvent();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleRegistrationSuccess = (token: string) => {
     setShowRegistrationForm(false);
