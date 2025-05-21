@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Calendar, MapPin, Users, Clock, ArrowLeft, Loader2, Copy, CheckCircle, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, ArrowLeft, Loader2, Copy, Share2 } from 'lucide-react';
 import { pb } from '../lib/pocketbase';
 import type { EventRecord } from '../types/pocketbase';
 import { RegistrationForm } from './volunteer/RegistrationForm';
@@ -110,6 +110,7 @@ export const EventDetail: React.FC = () => {
   }
 
   const presentParticipants = event.registrations?.filter(reg => reg.status === 'present') || [];
+  const isEventFull = presentParticipants.length >= event.maxParticipants;
   const userRegistration = event.registrations?.find(reg => reg.userId === user?.id);
   const shareUrl = window.location.href;
   const shareTitle = `${event.title} - Wings of the Ocean`;
@@ -184,7 +185,7 @@ export const EventDetail: React.FC = () => {
         </div>
 
         {/* Image de couverture */}
-        <div className="relative h-64 md:h-96 rounded-lg overflow-hidden mb-8">
+        <div className={`relative h-64 md:h-96 rounded-lg overflow-hidden mb-8 ${isEventFull ? 'grayscale' : ''}`}>
           <img
             src={event.imageUrl || DEFAULT_IMAGE}
             alt={event.title}
@@ -238,16 +239,16 @@ export const EventDetail: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-gray-100">
               <button
                 onClick={handleRegistrationClick}
-                disabled={!userRegistration && presentParticipants.length >= event.maxParticipants}
+                disabled={!userRegistration && isEventFull}
                 className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 
                          disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {!pb.authStore.isValid 
+                {isEventFull && !userRegistration
+                  ? "Évènement complet"
+                  : !pb.authStore.isValid 
                   ? "Se connecter pour s'inscrire"
                   : userRegistration
                   ? "Gérer mon inscription"
-                  : presentParticipants.length >= event.maxParticipants
-                  ? "Complet"
                   : "S'inscrire à l'événement"}
               </button>
             </div>
