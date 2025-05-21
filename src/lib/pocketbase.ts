@@ -50,12 +50,12 @@ export const registerForEvent = async (eventId: string, status: 'present' | 'abs
     .join('')
     .slice(0, 15);
 
-  // Create registration object with phone number
+  // Create registration object with surname
   const registration = {
     userId: user.id,
-    userName: user.name,
+    userName: `${user.name} ${user.surname}`,
     userEmail: user.email,
-    userPhone: user.phone?.toString(), // Ajout du numéro de téléphone
+    userPhone: user.phone?.toString(),
     status: status,
     token: token,
     registrationDate: new Date().toISOString()
