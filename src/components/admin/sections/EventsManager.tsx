@@ -8,7 +8,7 @@ import type { EventRecord } from '../../../types/pocketbase';
 import { UpdateEventForm } from '../UpdateEventForm';
 import { EventParticipantsView } from './EventParticipantsView';
 
-type EventFilter = 'upcoming' | 'past' | 'archived';
+type EventFilter = 'upcoming' | 'past' | 'archived' | 'full';
 
 export const EventsManager: React.FC = () => {
   const [events, setEvents] = useState<EventRecord[]>([]);
@@ -82,6 +82,8 @@ export const EventsManager: React.FC = () => {
   const filteredEvents = events.filter(event => {
     const now = new Date();
     const eventDate = new Date(event.date);
+    const presentParticipants = event.registrations?.filter(reg => reg.status === 'present').length || 0;
+    const isFull = presentParticipants >= event.maxParticipants;
 
     switch (filter) {
       case 'upcoming':
@@ -90,6 +92,8 @@ export const EventsManager: React.FC = () => {
         return eventDate < now && !event.archived;
       case 'archived':
         return event.archived;
+      case 'full':
+        return isFull && !event.archived;
       default:
         return true;
     }
@@ -155,6 +159,17 @@ export const EventsManager: React.FC = () => {
           >
             Archivés
           </button>
+          <button
+            onClick={() => setFilter('full')}
+            className={clsx(
+              "px-4 py-2 rounded-md text-sm font-medium",
+              filter === 'full'
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-500 hover:bg-gray-100"
+            )}
+          >
+            Complets
+          </button>
         </div>
       </div>
 
@@ -182,6 +197,7 @@ export const EventsManager: React.FC = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredEvents.map((event) => {
               const presentParticipants = event.registrations?.filter(reg => reg.status === 'present').length || 0;
+              const isFull = presentParticipants >= event.maxParticipants;
               
               return (
                 <tr key={event.id} className={clsx(event.archived && "bg-gray-50")}>
@@ -189,8 +205,13 @@ export const EventsManager: React.FC = () => {
                     {format(new Date(event.date), 'Pp', { locale: fr })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                       {event.title}
+                      {isFull && (
+                        <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                          Complet
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
