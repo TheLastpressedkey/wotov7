@@ -411,6 +411,8 @@ export const UserDashboard: React.FC = () => {
                     const registration = event.registrations?.find(reg => reg.userId === user.id);
                     if (!registration) return null;
 
+                    const calendarEvent = formatEventForCalendar(event);
+
                     return (
                       <div key={event.id} className="p-4">
                         <div className="flex items-start justify-between">
@@ -427,8 +429,25 @@ export const UserDashboard: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                          <div className={`ml-4 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(registration.status)}`}>
-                            {getStatusText(registration.status)}
+                          <div className="flex items-center gap-2">
+                            <AddToCalendarButton
+                              name={calendarEvent.name}
+                              description={calendarEvent.description}
+                              location={calendarEvent.location}
+                              startDate={calendarEvent.startDate}
+                              endDate={calendarEvent.endDate}
+                              startTime={calendarEvent.startTime}
+                              endTime={calendarEvent.endTime}
+                              timeZone={calendarEvent.timeZone}
+                              options={calendarEvent.options}
+                              buttonStyle="text"
+                              hideTextLabelButton
+                              size="2"
+                              className="!p-0"
+                            />
+                            <div className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(registration.status)}`}>
+                              {getStatusText(registration.status)}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -552,7 +571,7 @@ export const UserDashboard: React.FC = () => {
                                 </span>
                               </div>
                             </div>
-                            <div className="mt-4 flex items-center justify-between">
+                            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                               <div className="text-sm text-gray-500">
                                 <span className="font-medium">Token :</span>{' '}
                                 <code className="bg-gray-100 px-2 py-1 rounded">
@@ -573,6 +592,7 @@ export const UserDashboard: React.FC = () => {
                                   buttonStyle="text"
                                   hideTextLabelButton
                                   size="2"
+                                  className="!p-0"
                                 />
                                 <button 
                                   onClick={() => setUpdateStatusInfo({
