@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Calendar, MapPin, Clock, Users, Image, FileText, AlertCircle } from 'lucide-react';
+import { Loader2, Calendar, MapPin, Clock, Users, Image, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { pb } from '../../lib/pocketbase';
 
 export const CreateEventForm: React.FC = () => {
@@ -18,6 +18,7 @@ export const CreateEventForm: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
 
@@ -46,7 +47,10 @@ export const CreateEventForm: React.FC = () => {
       };
 
       await pb.collection('events').create(eventData);
-      navigate('/dashboard');
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
     } catch (error) {
       console.error('Error creating event:', error);
       setError(
@@ -54,10 +58,21 @@ export const CreateEventForm: React.FC = () => {
           ? error.message 
           : "Une erreur est survenue lors de la création de l'événement"
       );
-    } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Événement créé avec succès !</h2>
+          <p className="text-gray-600 mb-4">Redirection vers le tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
