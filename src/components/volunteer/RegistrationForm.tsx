@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { registerForEvent } from '../../lib/pocketbase';
 
 interface RegistrationFormProps {
@@ -17,6 +17,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [status, setStatus] = useState<'present' | 'absent' | 'undecided'>('present');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,7 +27,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
     try {
       const token = await registerForEvent(eventId, status);
-      onSuccess(token);
+      setSuccess(true);
+      setTimeout(() => {
+        onSuccess(token);
+        navigate('/dashboard');
+      }, 2000);
     } catch (err) {
       console.error('Registration error:', err);
       setError(
@@ -37,6 +42,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Inscription réussie !</h2>
+          <p className="text-gray-600 mb-4">
+            Vous pouvez gérer votre inscription dans votre espace personnel.
+          </p>
+          <p className="text-sm text-gray-500">
+            Redirection vers votre tableau de bord...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
