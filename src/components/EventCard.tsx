@@ -18,10 +18,8 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
   const navigate = useNavigate();
   const user = pb.authStore.model;
 
-  // Calculer le nombre de participants avec le statut "present"
   const presentParticipants = event.registrations?.filter(reg => reg.status === 'present').length || 0;
 
-  // Vérifier si l'utilisateur est déjà inscrit à cet événement
   const userRegistration = event.registrations?.find(
     reg => reg.userId === user?.id
   );
@@ -33,16 +31,17 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
     }
     
     if (userRegistration) {
-      // Si l'utilisateur est déjà inscrit, rediriger vers le dashboard
       navigate('/dashboard');
     } else {
-      // Sinon, permettre une nouvelle inscription
       onRegister();
     }
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden flex flex-col ${isPast ? 'opacity-75' : ''}`}>
+    <div 
+      className={`bg-white rounded-lg shadow-md overflow-hidden flex flex-col ${isPast ? 'opacity-75' : ''} cursor-pointer transform transition-transform hover:scale-[1.02]`}
+      onClick={() => navigate(`/event/${event.id}`)}
+    >
       <div className={`relative ${isPast ? 'grayscale' : ''}`}>
         <img
           src={event.imageUrl || DEFAULT_IMAGE}
@@ -83,7 +82,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
         {!isPast && (
           <div className="space-y-2 mt-auto">
             <button
-              onClick={handleAction}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAction();
+              }}
               disabled={!userRegistration && presentParticipants >= event.maxParticipants}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 
                        disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
@@ -96,15 +98,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, isPast 
                 ? "Complet"
                 : "S'inscrire"}
             </button>
-            {!userRegistration && (
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="w-full flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-blue-600 transition-colors py-1"
-              >
-                <Info className="w-4 h-4" />
-                <span>Déjà inscrit ? Gérer votre inscription</span>
-              </button>
-            )}
           </div>
         )}
       </div>
